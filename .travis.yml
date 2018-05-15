@@ -15,9 +15,11 @@ env:
     BOT_USERNAME=kite-bot
     BOT_NAME="Kite Bot"
     BOT_EMAIL=kite-bot@heliostech.fr
+    CONTAINER_REGISTRY=syaroslav
 
 services:
   - mysql
+  - docker
 
 # Execute all of the commands which need to be executed before installing dependencies.
 before_install:
@@ -26,6 +28,7 @@ before_install:
   - nvm install 8
   - nvm use 8
   - npm i -g yarn
+  - docker pull $CONTAINER_REGISTRY/applogic:latest || true
 
 # Execute all of the commands which should install application dependencies.
 install:
@@ -37,10 +40,11 @@ before_script:
 
 # Execute all of the commands which should make the build pass or fail.
 script:
-  - xvfb-run --auto-servernum --server-args="-screen 0 1280x800x16" bundle exec rspec
+  - bundle exec rspec &&
+   docker build --tag $CONTAINER_REGISTRY/applogic:latest --cache-from $CONTAINER_REGISTRY/applogic:latest .
 
 # Execute all of the commands which need to be executed after the build passed.
-after_success: env && ruby ci/bump.rb
+after_success: env # && ruby ci/bump.rb
 
 # Execute all of the commands which need to be executed after the build failed.
 after_failure:
